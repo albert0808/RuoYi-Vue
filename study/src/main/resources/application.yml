@@ -19,7 +19,7 @@ spring:
   application:
     name: ruoyi-study
   redis:
-    host: 127.0.0.1
+    host: 192.168.44.128
     port: 6379
     #password: AmAmAm!
     timeout: 5000ms
