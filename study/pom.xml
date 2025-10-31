@@ -30,6 +30,12 @@
             <artifactId>commons-pool2</artifactId>
             <version>2.12.0</version>
         </dependency>
+        <!-- redisson 缓存操作 -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>3.27.2</version> <!-- 或最新版本 -->
+        </dependency>
 
         <!--MQ相关引用-->
         <dependency>
@@ -61,6 +67,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
 

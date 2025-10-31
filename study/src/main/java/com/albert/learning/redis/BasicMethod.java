@@ -1,5 +1,7 @@
 package com.albert.learning.redis;
 
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,9 @@ import java.util.concurrent.TimeUnit;
 public class BasicMethod {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     /*第一部分：基础功能*/
     //String应用：用户登录缓存记录、取出
@@ -57,4 +62,37 @@ public class BasicMethod {
     }
     /*第二部分：进阶功能*/
     //应用：分布式锁（基于 setnx）场景：防止重复下单或超卖。
+    //分布式锁：redistemplate实现。这个模式有风险，可能会业务异常。
+    public boolean tryLock(String key,String value,long expireTime){
+        Boolean success  = redisTemplate.opsForValue().setIfAbsent(key, value, expireTime, TimeUnit.SECONDS);
+        //之所以如此返回，是success在某些情况有可能为null，如：连接超时、网络异常等情况
+        return Boolean.TRUE.equals(success);
+    }
+    public void unlock(String key,String value){
+        String current = (String) redisTemplate.opsForValue().get(key);
+        if (value.equals(current)) {
+            redisTemplate.delete(key);
+        }
+    }
+
+    //基于redission的锁（测试）
+    public void testLock(){
+        RLock lock = redissonClient.getLock("testLock");
+        try{
+            boolean getLock = lock.tryLock(1, 5, TimeUnit.SECONDS);
+            if(getLock){
+                System.out.println("✅ Redisson 分布式锁成功加锁！");
+                Thread.sleep(2000);
+            }else{
+                System.out.println("❌ 未能获取锁！");
+            }
+        }catch(InterruptedException e){
+            e.printStackTrace();
+        }finally {
+            if(lock.isHeldByCurrentThread()){
+                lock.unlock();
+                System.out.println("锁已释放。");
+            }
+        }
+    }
 }
