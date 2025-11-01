@@ -28,11 +28,12 @@ public class LockController {
     private RedisTemplate<String,Object> redisTemplate;
 
     @GetMapping("/setredis")
-    public void setredis() {
+    public String setredis() {
         Account a = new Account("A", 10000);
         Account b = new Account("B", 10000);
         redisTemplate.opsForValue().set("account:A",a);
         redisTemplate.opsForValue().set("account:B",b);
+        return "OK";
     }
 
     @GetMapping("/balance")
@@ -43,7 +44,7 @@ public class LockController {
         return map;
     }
     @GetMapping("/test")
-    public void doTest(@RequestParam String from,
+    public String doTest(@RequestParam String from,
                        @RequestParam String to,
                        @RequestParam int amount,
                        @RequestParam int type) throws InterruptedException {
@@ -53,6 +54,7 @@ public class LockController {
         }else{
             bankService.transferWithLockForMonolithB(from,to,amount);
         }
+        return "success";
     }
     @GetMapping("/test5")
     public void doTest5() throws InterruptedException {
