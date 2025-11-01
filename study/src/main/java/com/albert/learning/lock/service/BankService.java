@@ -79,8 +79,8 @@ public class BankService {
 
         synchronized (firstLock){
             synchronized(secondLock){
-                Account fromAcc = (Account)localLockManager.getLock(from);
-                Account toAcc = (Account)localLockManager.getLock(to);
+                Account fromAcc = (Account) redisTemplate.opsForValue().get("account:" + from);
+                Account toAcc = (Account) redisTemplate.opsForValue().get("account:" + to);
                 if(fromAcc.getBalance()>=amount){
                     fromAcc.setBalance(fromAcc.getBalance()-amount);
                     toAcc.setBalance(toAcc.getBalance()+amount);
