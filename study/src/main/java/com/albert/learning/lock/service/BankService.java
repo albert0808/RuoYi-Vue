@@ -86,8 +86,8 @@ public class BankService {
                     toAcc.setBalance(toAcc.getBalance()+amount);
 
                     // 回写 Redis
-                    redisTemplate.opsForValue().set("account:" + from, fromAcc.getBalance());
-                    redisTemplate.opsForValue().set("account:" + to, toAcc.getBalance());
+                    redisTemplate.opsForValue().set("account:" + from, fromAcc);
+                    redisTemplate.opsForValue().set("account:" + to, toAcc);
                 }
                 log.info("加锁的一次转账行为结束，转账金额："+amount+",当前"+from+"余额："+fromAcc.getBalance()+",当前账户"+to+"余额："+toAcc.getBalance()+";");
             }
@@ -167,8 +167,8 @@ public class BankService {
                 toAcc.setBalance(toAcc.getBalance()+amount);
 
                 // 回写 Redis
-                redisTemplate.opsForValue().set("account:" + from, fromAcc.getBalance());
-                redisTemplate.opsForValue().set("account:" + to, toAcc.getBalance());
+                redisTemplate.opsForValue().set("account:" + from, fromAcc);
+                redisTemplate.opsForValue().set("account:" + to, toAcc);
             }
             log.info("加锁的一次转账行为结束，转账金额："+amount+",当前"+fromAcc.getName()+"余额："+fromAcc.getBalance()+",当前账户"+toAcc.getName()+"余额："+toAcc.getBalance()+";");
 
