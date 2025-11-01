@@ -34,8 +34,9 @@
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
-            <version>3.27.2</version> <!-- 或最新版本 -->
+            <version>3.23.4</version>
         </dependency>
+
 
         <!--MQ相关引用-->
         <dependency>
