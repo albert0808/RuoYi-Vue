@@ -92,3 +92,23 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+logging:
+  file:
+    name: ./logs/m.log
+  level:
+    #配置package日志输出级别 trace ,info ,warn ,debug ,error
+    tracer: trace
+    com.albert: info
+  logback:
+    #日志的滚动策略
+    rollingpolicy:
+      #单个日志的log文件最大15MB
+      max-file-size: 2MB
+      #最多保留10天的历史日志
+      max-history: 2
+  #配置日志输出的格式
+  pattern:
+    #输出到控制台的格式
+    console: "%date  %level [%thread] [%X{traceId}] %logger{10} [%file : %line] %msg%n"
+    #输出到磁盘的log文件的内容格式
+    file: "%date  %level [%thread] [%X{traceId}] %logger{10} [%file : %line] %msg%n"

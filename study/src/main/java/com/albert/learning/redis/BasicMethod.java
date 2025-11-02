@@ -1,6 +1,7 @@
 package com.albert.learning.redis;
 
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -93,6 +94,27 @@ public class BasicMethod {
                 lock.unlock();
                 System.out.println("锁已释放。");
             }
+        }
+    }
+    //读写锁
+    //应用：①商品库存查询与修改 ②配置中心（读取配置 vs 更新配置） ③缓存预热或更新
+    public void readWriteLockExample(String key) {
+        RReadWriteLock rw = redissonClient.getReadWriteLock("rw:"+key);
+        RLock rLock = rw.readLock();
+        RLock wLock = rw.writeLock();
+
+        wLock.lock();
+        try{
+
+        }finally {
+            wLock.unlock();
+        }
+
+        rLock.lock();
+        try{
+
+        }finally {
+            rLock.unlock();
         }
     }
 }

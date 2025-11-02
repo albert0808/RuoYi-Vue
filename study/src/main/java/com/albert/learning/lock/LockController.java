@@ -2,6 +2,7 @@ package com.albert.learning.lock;
 
 
 import com.albert.learning.lock.service.BankService;
+import com.albert.learning.lock.service.SeckService;
 import com.albert.learning.redis.BasicMethod;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +26,19 @@ public class LockController {
     private BankService bankService;
 
     @Autowired
-    private RedisTemplate<String,Object> redisTemplate;
+    private SeckService seckService;
 
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+    String productId = "1001";
     @GetMapping("/setredis")
     public String setredis() {
         Account a = new Account("A", 10000);
         Account b = new Account("B", 10000);
         redisTemplate.opsForValue().set("account:A",a);
         redisTemplate.opsForValue().set("account:B",b);
+
+        redisTemplate.opsForValue().set("stock:" + productId, 10);
         return "OK";
     }
 
@@ -41,6 +47,7 @@ public class LockController {
         Map<String, Object> map = new HashMap<>();
         map.put("A", ((Account) redisTemplate.opsForValue().get("account:A")).getBalance());
         map.put("B", ((Account) redisTemplate.opsForValue().get("account:B")).getBalance());
+        map.put("stock:" + productId, redisTemplate.opsForValue().get("stock:" + productId));
         return map;
     }
     @GetMapping("/test")
@@ -50,9 +57,25 @@ public class LockController {
                        @RequestParam int type) throws InterruptedException {
 
         if(type==1){
+            //测试后正常，无丢失，金额也符合预期
             bankService.transfer(from,to,amount);
         }else{
+            //测试后异常，金额混乱
             bankService.transferWithLockForMonolithB(from,to,amount);
+        }
+        return "success";
+    }
+    @GetMapping("/test1")
+    public String doTest1(
+                         @RequestParam int type) throws InterruptedException {
+        if(type==1){
+            //测试后正常，无丢失，金额也符合预期
+            seckService.seckillNoLock(productId);
+        }else if(type==2){
+            //测试后异常，金额混乱
+            seckService.seckillWithLock(productId);
+        }else{
+            seckService.seckillWithReadWriteLock(productId);
         }
         return "success";
     }
