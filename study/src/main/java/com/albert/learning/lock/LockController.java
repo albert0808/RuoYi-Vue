@@ -69,10 +69,8 @@ public class LockController {
     public String doTest1(
                          @RequestParam int type) throws InterruptedException {
         if(type==1){
-            //测试后正常，无丢失，金额也符合预期
             seckService.seckillNoLock(productId);
         }else if(type==2){
-            //测试后异常，金额混乱
             seckService.seckillWithLock(productId);
         }else{
             seckService.seckillWithReadWriteLock(productId);

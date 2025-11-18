@@ -43,7 +43,6 @@ public class BankService {
      * @param to
      * @param amount
      */
-    @Transactional
     public void transferWithNoLock(Account from, Account to, int amount){
         if(from.getBalance()>=amount){
             from.setBalance(from.getBalance()-amount);
@@ -58,7 +57,6 @@ public class BankService {
      * @param to
      * @param amount
      */
-    @Transactional
     public void transferWithLockForMonolith(Account from, Account to, int amount){
         //比较重量的加锁方式
         //synchronizedThis(from,to,amount);
@@ -66,7 +64,6 @@ public class BankService {
         synchronizedTwo(from,to,amount);
     }
 
-    @Transactional
     public void transferWithLockForMonolithB(String from, String to, int amount){
         Object lockA = localLockManager.getLock(from);
         Object lockB = localLockManager.getLock(to);

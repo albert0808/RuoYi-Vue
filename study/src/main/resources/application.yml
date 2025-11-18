@@ -18,29 +18,57 @@ server:
 spring:
   application:
     name: ruoyi-study
+
   redis:
-    host: 192.168.44.128
-    port: 6379
-    password: AmAmAm!
-    timeout: 5000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
+    cluster:
+      nodes:
+        - 192.168.44.128:7000
+        - 192.168.44.129:7000
+        - 192.168.44.130:7000
+        - 192.168.44.128:7001
+        - 192.168.44.129:7001
+        - 192.168.44.130:7001
+      max-redirects: 3   # 重定向最大次数（MOVED / ASK）
+      password: ""          # 如果设置了密码，填上
+      timeout: 5000ms
+#    sentinel:
+#      master: mymaster               # 与 sentinel.conf 中的 "sentinel monitor mymaster ..." 一致
+#      nodes:
+#        - 192.168.44.128:26379
+#        - 192.168.44.129:26379
+#        - 192.168.44.130:26379
+#    password: AmAmAm!
+#    timeout: 5000ms
+#    lettuce:
+#      pool:
+#        max-active: 8
+#        max-idle: 8
+#        min-idle: 0
+#        max-wait: -1ms
+
   # Redisson 配置
-  redisson:
-    config: |
-      singleServerConfig:
-        address: "redis://192.168.44.128:6379"
-        password: "AmAmAm!"
-        database: 0
-        connectionMinimumIdleSize: 2
-        connectionPoolSize: 8
-      threads: 4
-      nettyThreads: 4
-      codec: !<org.redisson.codec.JsonJacksonCodec> {}
+#  redisson:
+#    config: |
+#      sentinelServersConfig:
+#        masterName: "mymaster"
+#        sentinelAddresses:
+#          - "redis://192.168.44.128:26379"
+#          - "redis://192.168.44.129:26379"
+#          - "redis://192.168.44.130:26379"
+#        password: "AmAmAm!"
+#        database: 0
+#        readMode: MASTER
+#        masterConnectionPoolSize: 8
+#        slaveConnectionPoolSize: 8
+#        checkSentinelsList: true         # ✅ 自动刷新哨兵信息
+#        failedSlaveReconnectionInterval: 10000  # ✅ 失效从节点每10秒重连
+#        failedSlaveCheckInterval: 60000         # ✅ 每分钟检测失效从节点
+#        retryAttempts: 3
+#        retryInterval: 2000
+#        timeout: 5000
+#      threads: 4
+#      nettyThreads: 4
+#      codec: !<org.redisson.codec.JsonJacksonCodec> {}
 
   # 资源信息
   messages:
