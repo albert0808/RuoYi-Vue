@@ -28,6 +28,15 @@ public class GcTestController {
          * 每次测试总分配对象 = loops * batch
          */
 
+        // --------------------------------------------------
+        // ① 自动预热（JIT + GC 充分稳定）
+        // --------------------------------------------------
+        warmUp();
+
+
+        // --------------------------------------------------
+        // ② 正式测试
+        // --------------------------------------------------
         long start = System.currentTimeMillis();
 
         Random r = new Random();
@@ -48,22 +57,60 @@ public class GcTestController {
 
         long cost = System.currentTimeMillis() - start;
 
-        // 获取 GC 指标
+
+        // --------------------------------------------------
+        // ③ 采集 GC 指标
+        // --------------------------------------------------
         Map<String, Long> gc = getGcMetrics();
+
 
         // QPS 估算
         long totalOps = (long) loops * batch;
         double qps = totalOps / ((double) cost / 1000);
 
+
+        // --------------------------------------------------
+        // ④ 写入 Excel
+        // --------------------------------------------------
         saveExcel(gcType, cost, qps,
                 gc.get("gcTotalPause"),
                 gc.get("gcMaxPause"),
                 gc.get("fullGcCount"),
                 gc.get("oldGenUsage"));
 
+
         return "GC=" + gcType + ", cost=" + cost + "ms, QPS=" + qps;
     }
 
+
+    // ======================================================
+    // 🔥 预热阶段（新增功能）
+    // ======================================================
+    private void warmUp() {
+        System.out.println("=== Warm-up started ===");
+
+        Random r = new Random();
+        // 预热：执行大量小对象分配 + 清空
+        for (int i = 0; i < 2000; i++) {
+            List<byte[]> tmp = new ArrayList<>();
+            for (int j = 0; j < 2000; j++) {
+                tmp.add(new byte[50 + r.nextInt(100)]);
+            }
+            tmp.clear();
+        }
+
+        // 主动触发一次 GC（让 GC 进入正常频率）
+        System.gc();
+
+        System.out.println("=== Warm-up finished ===");
+    }
+
+
+
+
+    // ======================================================
+    // GC 指标采集（沿用你的逻辑）
+    // ======================================================
     private Map<String, Long> getGcMetrics() {
         long totalPause = 0;
         long maxPause = 0;
@@ -93,6 +140,10 @@ public class GcTestController {
         return map;
     }
 
+
+    // ======================================================
+    // 保留你原来的 Excel 写入逻辑
+    // ======================================================
     private void saveExcel(String gcType, long avgRT, double qps,
                            long gcTotalPause, long maxPause,
                            long fullGcCount, long oldGenUsage) throws Exception {
