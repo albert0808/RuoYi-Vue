@@ -15,62 +15,75 @@ import java.util.*;
 public class GcTestController {
 
     private static final String EXCEL_PATH = "gc-metrics.xlsx";
-    private final List<byte[]> holder = new ArrayList<>();
 
     @GetMapping("/test")
-    public String testGcMetrics(@RequestParam(defaultValue = "alloc") String action,
-                                @RequestParam(defaultValue = "100000") int count,
-                                @RequestParam(defaultValue = "G1") String gcType) throws Exception {
+    public String testGc(@RequestParam(defaultValue = "100") int loops,
+                         @RequestParam(defaultValue = "5000") int batch,
+                         @RequestParam(defaultValue = "G1") String gcType) throws Exception {
+
+        /**
+         * loops：循环次数（一次循环分配一定量的对象）
+         * batch：每次循环分配对象个数
+         *
+         * 每次测试总分配对象 = loops * batch
+         */
+
         long start = System.currentTimeMillis();
 
-        if ("alloc".equals(action)) {
-            for (int i = 0; i < count; i++) {
-                byte[] data = new byte[1024]; // 1KB对象
+        Random r = new Random();
+
+        for (int i = 0; i < loops; i++) {
+
+            // 临时对象列表 —— 循环结束自动释放
+            List<byte[]> tmp = new ArrayList<>();
+
+            for (int j = 0; j < batch; j++) {
+                // 100byte ~ 500byte 随机
+                tmp.add(new byte[100 + r.nextInt(400)]);
             }
-        } else if ("retain".equals(action)) {
-            for (int i = 0; i < count; i++) {
-                holder.add(new byte[1024 * 1024]); // 1MB对象
-            }
-        } else if ("clear".equals(action)) {
-            holder.clear();
+
+            // 释放引用，让 GC 有机会回收
+            tmp.clear();
         }
 
         long cost = System.currentTimeMillis() - start;
 
-        // 获取 GC Metrics
-        Map<String, Long> gcMetrics = getGcMetrics();
+        // 获取 GC 指标
+        Map<String, Long> gc = getGcMetrics();
 
-        // 假设 QPS = count / cost(ms) * 1000
-        double qps = count / ((double) cost / 1000);
+        // QPS 估算
+        long totalOps = (long) loops * batch;
+        double qps = totalOps / ((double) cost / 1000);
 
-        // 写入 Excel
         saveExcel(gcType, cost, qps,
-                gcMetrics.get("gcTotalPause"),
-                gcMetrics.get("gcMaxPause"),
-                gcMetrics.get("fullGcCount"),
-                gcMetrics.get("oldGenUsage"));
+                gc.get("gcTotalPause"),
+                gc.get("gcMaxPause"),
+                gc.get("fullGcCount"),
+                gc.get("oldGenUsage"));
 
-        return "Action=" + action + ", cost=" + cost + "ms, QPS=" + qps;
+        return "GC=" + gcType + ", cost=" + cost + "ms, QPS=" + qps;
     }
 
     private Map<String, Long> getGcMetrics() {
         long totalPause = 0;
         long maxPause = 0;
         long fullGcCount = 0;
-        long oldGenUsage = 0;
+        long oldGenUsage;
 
         for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
-            long count = gc.getCollectionCount() == -1 ? 0 : gc.getCollectionCount();
-            long time = gc.getCollectionTime() == -1 ? 0 : gc.getCollectionTime();
+            long count = Math.max(0, gc.getCollectionCount());
+            long time = Math.max(0, gc.getCollectionTime());
             totalPause += time;
-            maxPause = Math.max(maxPause, time); // 简单示例
-            if (gc.getName().toLowerCase().contains("old") || gc.getName().toLowerCase().contains("full")) {
+            maxPause = Math.max(maxPause, time);
+
+            String name = gc.getName().toLowerCase();
+            if (name.contains("old") || name.contains("mark") || name.contains("full")) {
                 fullGcCount += count;
             }
         }
 
-        MemoryUsage oldGen = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-        oldGenUsage = oldGen.getUsed() / (1024 * 1024); // MB
+        MemoryUsage heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        oldGenUsage = heap.getUsed() / (1024 * 1024);
 
         Map<String, Long> map = new HashMap<>();
         map.put("gcTotalPause", totalPause);
@@ -110,11 +123,10 @@ public class GcTestController {
             header.createCell(7).setCellValue("Old Gen Usage(MB)");
         }
 
-        int lastRow = sheet.getLastRowNum() + 1;
-        Row row = sheet.createRow(lastRow);
+        int last = sheet.getLastRowNum() + 1;
+        Row row = sheet.createRow(last);
 
         String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-
         row.createCell(0).setCellValue(time);
         row.createCell(1).setCellValue(gcType);
         row.createCell(2).setCellValue(avgRT);
