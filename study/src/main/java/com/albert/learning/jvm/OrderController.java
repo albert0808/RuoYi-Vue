@@ -1,5 +1,9 @@
 package com.albert.learning.jvm;
+import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/order")
@@ -46,10 +50,23 @@ public class OrderController {
     // -----------------------------
     // Metaspace OOM
     // -----------------------------
+//    @GetMapping("/test/metaspace-oom")
+//    public String metaspaceOom() throws Exception {
+//        return service.metaSpaceOom();
+//    }
+
     @GetMapping("/test/metaspace-oom")
-    public String metaspaceOom() throws Exception {
-        return service.metaSpaceOom();
+    public String metaspaceOOM() {
+        List<Object> list = new ArrayList<>();
+
+        while (true) {
+            Enhancer enhancer = new Enhancer();
+            enhancer.setSuperclass(OrderService.class);
+            enhancer.setUseCache(false);  // 不使用缓存，每次都生成新类
+            list.add(enhancer.create());
+        }
     }
+
 
     // -----------------------------
     // Direct Memory OOM
