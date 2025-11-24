@@ -2,6 +2,8 @@ package com.albert.learning.jvm;
 
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -64,14 +66,16 @@ public class OrderService {
     // Metaspace OOM
     // -----------------------------
     public String metaSpaceOom() throws Exception {
-        List<Class<?>> classes = new ArrayList<>();
+        List<ClassLoader> loaders = new ArrayList<>();
+
         for (int i = 0; i < 100_000; i++) {
-            ClassLoader loader = new ClassLoader() {};
-            Class<?> c = loader.loadClass("java.lang.String"); // 模拟生成类
-            classes.add(c);
+            URLClassLoader loader = new URLClassLoader(new URL[]{new URL("file:/tmp/classes/")});
+            loaders.add(loader);
+            Class.forName("com.example.MyClass" + (i % 10), true, loader);
         }
         return "done";
     }
+
 
     // -----------------------------
     // Direct Memory OOM
