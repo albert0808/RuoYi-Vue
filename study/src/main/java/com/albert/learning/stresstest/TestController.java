@@ -44,4 +44,43 @@ public class TestController {
 
         return "ok";
     }
+
+    /**
+     * 可控耗时 +可控返回内容长度的压测接口
+     * 示例：/test/custom?ms=100&len=1024
+     *
+     * @param ms  模拟耗时（毫秒）
+     * @param len 返回内容长度（字节数）
+     */
+    @GetMapping("/test/custom")
+    public String custom(
+            @RequestParam(defaultValue = "0") long ms,
+            @RequestParam(defaultValue = "0") int len) {
+
+        long start = System.currentTimeMillis();
+
+        // 1. 控制耗时
+        try {
+            if (ms > 0) {
+                Thread.sleep(ms);
+            }
+        } catch (InterruptedException e) {
+            log.error("sleep interrupted", e);
+        }
+
+        // 2. 构造指定长度的返回内容
+        // 使用 char 填充字符串（1 char=1字节，适合 ASCII）
+        StringBuilder sb = new StringBuilder();
+        if (len > 0) {
+            for (int i = 0; i < len; i++) {
+                sb.append('A');  // 你也可以换成随机字符
+            }
+        }
+
+        long cost = System.currentTimeMillis() - start;
+        log.info("【/test/custom】指定耗时={}ms, 实际耗时={}ms, 返回长度={}字节",
+                ms, cost, len);
+
+        return sb.toString();
+    }
 }
