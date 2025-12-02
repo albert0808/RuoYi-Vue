@@ -14,6 +14,11 @@ server:
       max: 800
       # Tomcat启动初始化的线程数，默认值10
       min-spare: 100
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 spring:
   application:
